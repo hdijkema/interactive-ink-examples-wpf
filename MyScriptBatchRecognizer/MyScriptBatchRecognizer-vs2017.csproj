@@ -7,7 +7,7 @@
     <ProjectGuid>{5D7ED6D6-673A-4F5A-91AF-2D037563DEDE}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>MyScript.IInk.GetStarted</RootNamespace>
+    <RootNamespace>MyScriptBatchRecognizer</RootNamespace>
     <AssemblyName>MyScriptRecognizer</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -183,6 +183,9 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="FontMetricsProvider.cs" />
+    <Compile Include="ILogMessage.cs" />
+    <Compile Include="LogToConsole.cs" />
+    <Compile Include="ShowHideApp.cs" />
     <Compile Include="zcRecognizer.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
@@ -243,7 +246,8 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PreBuildEvent>powershell.exe -NonInteractive -executionpolicy unrestricted -File "$(SolutionDir)getRecognitionAssets.ps1"</PreBuildEvent>
+    <PreBuildEvent>
+    </PreBuildEvent>
   </PropertyGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>

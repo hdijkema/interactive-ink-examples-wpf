@@ -11,7 +11,7 @@ using System.Windows.Media;
 using System;
 using System.Threading;
 
-namespace MyScript.IInk.UIReferenceImplementation
+namespace MyScriptBatchRecognizer
 {
     public class FontMetricsProvider : IFontMetricsProvider2
     {

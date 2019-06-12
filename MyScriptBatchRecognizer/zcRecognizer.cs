@@ -4,9 +4,9 @@ using System.Diagnostics;
 using System.IO;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Json;
-using System.Threading.Tasks;
 using System.Collections.Generic;
-using MyScript.IInk.UIReferenceImplementation;
+using MyScriptBatchRecognizer;
+using System.Windows.Threading;
 
 [DataContract]
 internal class Cmd
@@ -33,6 +33,8 @@ internal class StrokesInput
 {
     [DataMember(Name = "type", IsRequired = true)]
     internal String type { get; set; } = "";
+    [DataMember(Name = "lang", IsRequired = true)]
+    internal String lang { get; set; } = "";
     [DataMember(Name = "strokes", IsRequired = true)]
     internal StrokePoint[] strokes { get; set; } = null;
 }
@@ -48,6 +50,18 @@ internal class Result
 
 internal class Listener : IEditorListener
 {
+    private ILogMessage logger;
+
+    public Listener()
+    {
+        logger = new LogToConsole();
+    }
+
+    public void setLogger(ILogMessage l)
+    {
+        logger = l;
+    }
+
     public void ContentChanged(Editor editor, string[] blockIds)
     {
         String ids = "";
@@ -59,17 +73,17 @@ internal class Listener : IEditorListener
             ids += blockIds[i];
             comma = ", ";
         }
-        Console.WriteLine("Content Changed: " + ids);
+        logger.logDebug("Content Changed: " + ids);
     }
 
     public void OnError(Editor editor, string blockId, string message)
     {
-        Console.WriteLine("Error(" + blockId + "): " + message);
+        logger.logError("Block Id(" + blockId + "): " + message);
     }
 
     public void PartChanged(Editor editor)
     {
-        Console.WriteLine("Part Changed");
+        logger.logDebug("Part Changed");
     }
 }
 
@@ -80,11 +94,16 @@ namespace MyScriptRecognizer
         String _path;
         String _tmp_path;
 
+        String _lang;
+
         Editor _editor;
         Engine _engine;
         Renderer _renderer;
         ContentPackage _package;
         ContentPart _part;
+
+        Listener _listener;
+        ILogMessage _logger;
 
         float _dpiX;
         float _dpiY;
@@ -94,16 +113,24 @@ namespace MyScriptRecognizer
             return basedir + "\\" + name;
         }
 
-        public zcRecognizer(String _monitor_directory)
+        public zcRecognizer(String _monitor_directory, String language)
         {
+            _lang = language;
             _path = _monitor_directory;
             _tmp_path = _path + "\\" + "tmp";
             DirectoryInfo d = new DirectoryInfo(_tmp_path);
             d.Create();
-				}
+		}
 				
 	    public void initDefault()
 		{
+            // Dispose if not null
+            if (_package != null) { _package.Dispose();_package = null; }
+            if (_part != null) { _part.Dispose(); _part = null; }
+            if (_editor != null) { _editor.Dispose(); _editor = null;  }
+            if (_renderer != null) { _renderer.Dispose(); _renderer = null; }
+            if (_engine != null) { _engine.Dispose(); _engine = null; }
+
             _engine = Engine.Create(MyScript.Certificate.MyCertificate.Bytes);
             var confDirs = new string[1];
             confDirs[0] = "conf";
@@ -113,13 +140,12 @@ namespace MyScriptRecognizer
             var tempFolder = _tmp_path;
             _engine.Configuration.SetString("content-package.temp-folder", tempFolder);
 
-            _engine.Configuration.SetString("lang", "nl_NL");
+            _engine.Configuration.SetString("lang", _lang);
 
-            // Initialize the editor with the engine
-            //UcEditor.Engine = _engine;
             _dpiX = 300;
             _dpiY = 300;
             _renderer = _engine.CreateRenderer(_dpiX, _dpiY, null);
+
             _package = _engine.CreatePackage("text.iink");
             _part = _package.CreatePart("Text");
 
@@ -133,30 +159,41 @@ namespace MyScriptRecognizer
 
             initListener();
         }
-				
-		public void initFromVars(Engine e, Editor ed, Renderer r, float dpix, float dpiy, ContentPackage pk, ContentPart part)
-		{
-			_dpiX = dpix;
-			_dpiY = dpiy;
-			_engine = e;
-			_editor = ed;
-			_part = part;
-			_package = pk;
-			_renderer = r;
-            initListener();
-		}
+
+        public void setLanguage(String lang)
+        {
+            if (lang != _lang)
+            {
+                _lang = lang;
+                initDefault();
+            }
+        }
 
         private void initListener()
         {
-            _editor.AddListener(new Listener());
+            if (_logger == null)
+            {
+                _logger = new LogToConsole();
+            }
+
+            _listener = new Listener();
+            _listener.setLogger(_logger);
+            _editor.AddListener(_listener);
+        }
+
+        public void setLogger(ILogMessage logger)
+        {
+            _logger = logger;
+            _listener.setLogger(logger);
+        }
+
+        public ILogMessage logger()
+        {
+            return _logger;
         }
 
         public bool Convert()
         {
-            float dpix = _dpiX;
-            float dpiy = _dpiY;
-            Editor editor = _editor;
-
             var cmd_file = _path + "/cmd.json";
             cmd_file = cmd_file.Replace('/', '\\');
             FileInfo cmd_f = new FileInfo(cmd_file);
@@ -169,22 +206,31 @@ namespace MyScriptRecognizer
 
                 if (c.cmd == "quit")
                 {
+                    _logger.logInfo("Quit received, closing Recognizer");
                     cmd_f.Delete();
                     return true;    // Quit
                 }
                 else if (c.cmd == "recognize")
                 {
-                    editor.Clear();
+                    _logger.logInfo("Recognition job received");
+                    _editor.Clear();
 
                     var input_file = c.input_file;
                     FileInfo in_f = new FileInfo(input_file);
+                    _logger.logInfo("Size of job: " + in_f.Length / 1024 + " Kb");
+
                     DataContractJsonSerializer rec_ser = new DataContractJsonSerializer(typeof(StrokesInput));
                     FileStream in_f_s = in_f.OpenRead();
                     StrokesInput si = (StrokesInput)rec_ser.ReadObject(in_f_s);
                     in_f_s.Dispose();
 
-                    Debug.WriteLine("Recognize received");
+                    String lng = si.lang;
+                    if (lng != _lang) {
+                        _logger.logInfo("Resetting language to: " + lng);
+                        setLanguage(lng);
+                    }
 
+                    _logger.logDebug("Assembling Pointer Events...");
                     List<PointerEvent> events = new List<PointerEvent>();
 
                     int i, N;
@@ -194,8 +240,8 @@ namespace MyScriptRecognizer
                         int j, M;
                         for(j = 0, M = stroke.x.Length; j < M; j++)
                         {
-                            float x = stroke.x[j] / (300.0f / dpix);
-                            float y = stroke.y[j] / (300.0f / dpiy);
+                            float x = stroke.x[j] / (300.0f / _dpiX);
+                            float y = stroke.y[j] / (300.0f / _dpiY);
 
                             PointerEvent evt;
 
@@ -220,13 +266,40 @@ namespace MyScriptRecognizer
                         }
                     }
 
-                    editor.PointerEvents(events.ToArray(), false);
-                            
-                    editor.WaitForIdle();
-                    String result = editor.Export_(editor.GetRootBlock(), MimeType.TEXT);
+                    _logger.logDebug("Feeding Pointer Events to Editor");
+                    _editor.PointerEvents(events.ToArray(), false);
+
+                    _logger.logDebug("Waiting for recognizer to finish");
+                    DateTime tm_start = DateTime.Now;
+                    int s = -1;
+                    while (!_editor.IsIdle())
+                    {
+                        App.Current.Dispatcher.Invoke(DispatcherPriority.Background, new Action(delegate { }));
+                        System.Threading.Thread.Sleep(20);
+                        double seconds = DateTime.Now.Subtract(tm_start).TotalSeconds;
+                        int ss = (int)seconds;
+                        if (ss != s)
+                        {
+                            _logger.logDebug("Waiting " + ss + " seconds...");
+                            s = ss;
+                        }
+                        _logger.logRemaining();
+                    }
+                    //_editor.WaitForIdle();
+
+                    _logger.logDebug("Getting result...");
+                    String result = _editor.Export_(_editor.GetRootBlock(), MimeType.TEXT);
+
+                    if (_logger.debug())
+                    {
+                        String rr = result.Replace("\n", "\\n");
+                        if (rr.Length < 40) { _logger.logDebug("Result: " + rr); }
+                        else { _logger.logDebug("Result: " + rr.Substring(0, 40) + "..."); }
+                    }
 
                     in_f.Delete();
 
+                    _logger.logDebug("Writing back result to " + c.output_file);
                     var result_file = c.output_file + "_ff";
                     var result_ren = c.output_file;
                     FileInfo result_f = new FileInfo(result_file);
@@ -238,6 +311,8 @@ namespace MyScriptRecognizer
                     res_ser.WriteObject(f_out, r);
                     f_out.Dispose();
                     result_f.MoveTo(result_ren);
+
+                    _logger.logInfo("done.");
                 }
 
                 cmd_f.Delete();
