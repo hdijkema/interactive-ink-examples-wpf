@@ -96,7 +96,6 @@ namespace MyScriptBatchRecognizer
             this.Closing += Window_Closing;
             ShowHideApp obj = (ShowHideApp)this.WindowGrid.Resources["ShowHide"];
             obj.setWindow(this);
-            obj.hide();
         }
 
         private void Window_Closing(object sender, CancelEventArgs e)
@@ -123,8 +122,13 @@ namespace MyScriptBatchRecognizer
             _recognizer.setLogger(_logger);
             _recognizer.logger().setLogDebug(true);
 
-            ComponentDispatcher.ThreadIdle += new EventHandler(OnProcessWork);
-         }
+            //ComponentDispatcher.ThreadIdle += new EventHandler(OnProcessWork);
+
+            ShowHideApp obj = (ShowHideApp)this.WindowGrid.Resources["ShowHide"];
+            obj.hide();
+
+            _recognizer.Run();
+        }
 
         private void Exit_App(object sender, RoutedEventArgs e)
         {
@@ -135,12 +139,12 @@ namespace MyScriptBatchRecognizer
 
         private void OnProcessWork(object sender, EventArgs e)
         {
-            bool quit = _recognizer.Convert();
+            /*bool quit = _recognizer.Convert();
             if (quit)
             {
                 App app = (App)Application.Current;
                 app.Shutdown();
-            }
+            }*/
         }
     }
 }

@@ -7,6 +7,7 @@ using System.Runtime.Serialization.Json;
 using System.Collections.Generic;
 using MyScriptBatchRecognizer;
 using System.Windows.Threading;
+using System.Windows;
 
 [DataContract]
 internal class Cmd
@@ -190,6 +191,19 @@ namespace MyScriptRecognizer
         public ILogMessage logger()
         {
             return _logger;
+        }
+
+        public async void Run()
+        {
+            bool _stop = false;
+            while(!_stop)
+            {
+                _stop = Convert();
+                System.Threading.Thread.Sleep(10);
+                App.Current.Dispatcher.Invoke(DispatcherPriority.Background, new Action(delegate { }));
+            }
+            App app = (App)(Application.Current);
+            app.Shutdown();
         }
 
         public bool Convert()
