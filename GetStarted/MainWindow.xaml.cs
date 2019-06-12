@@ -243,15 +243,13 @@ namespace MyScript.IInk.GetStarted
             return "";
         }
 
-        private void SetInputMode(InputMode inputMode)
+        /*private void SetInputMode(InputMode inputMode)
         {
-            /*
             UcEditor.InputMode = inputMode;
             Auto.IsChecked = (inputMode == InputMode.AUTO);
             Touch.IsChecked = (inputMode == InputMode.TOUCH);
             Pen.IsChecked = (inputMode == InputMode.PEN);
-            */
-        }
+        }*/
 
         private void Pen_Click(object sender, RoutedEventArgs e)
         {
