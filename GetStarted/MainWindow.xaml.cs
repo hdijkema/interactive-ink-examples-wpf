@@ -8,6 +8,7 @@ using System.Windows;
 using System.Windows.Controls.Primitives;
 using MyScript.IInk.UIReferenceImplementation;
 using MyScriptRecognizer;
+using System.Windows.Interop;
 
 namespace MyScript.IInk.GetStarted
 {
@@ -48,12 +49,13 @@ namespace MyScript.IInk.GetStarted
                 _editor.Dispose();
             }
 
-            UcEditor?.Closing();
+            //UcEditor?.Closing();
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            var localFolder = "c:\\devel\\recognize"; // Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+            MyScriptBatchRecognizer.App app = (MyScriptBatchRecognizer.App)Application.Current;
+            var localFolder = app.WorkingDirectory(); // Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
             var tempFolder = localFolder + "\\tmp"; //Path.Combine(localFolder, "MyScript", "tmp");
 
             /*try
@@ -147,10 +149,17 @@ namespace MyScript.IInk.GetStarted
             _recognizer.initDefault();
 
             // Force pointer to be a pen, for an automatic detection, set InputMode to AUTO
-            SetInputMode(InputMode.PEN);
+            //SetInputMode(InputMode.PEN);
 
-            NewFile();
+            //NewFile();
+
+            ComponentDispatcher.ThreadIdle += new EventHandler(OnProcessWork);
          }
+
+        private void OnProcessWork(object sender, EventArgs e)
+        {
+            _recognizer.Convert();
+        }
 
         private void EditUndo_MenuItem_Click(object sender, RoutedEventArgs e)
         {

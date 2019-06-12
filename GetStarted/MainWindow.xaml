@@ -8,10 +8,11 @@
         mc:Ignorable="d"
         Title="iink GetStarted"
         Loaded="Window_Loaded">
-    <Window.Resources>
+    <!--<Window.Resources>
         <ResourceDictionary Source="/MyScript.InteractiveInk.UIReferenceImplementation.Wpf;component/ResourceDictionary.xaml" />
     </Window.Resources>
-    <Grid>
+    -->
+    <!-- <Grid>
         <Grid.RowDefinitions>
             <RowDefinition  Height="auto"></RowDefinition>
             <RowDefinition  Height="auto"></RowDefinition>
@@ -56,4 +57,5 @@
             </ToggleButton>
         </StackPanel>
     </Grid>
+    -->
 </Window>
