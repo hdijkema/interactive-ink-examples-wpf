@@ -239,5 +239,4 @@ ModelManifest.xml
 
 # FAKE - F# Make
 .fake/
-recognition-assets/
 INFO/
