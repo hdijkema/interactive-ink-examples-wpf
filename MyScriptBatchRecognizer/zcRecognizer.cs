@@ -18,6 +18,10 @@ internal class Cmd
     internal String input_file { get; set; } = "";
     [DataMember(Name = "result", IsRequired = false)]
     internal String output_file { get; set; } = "";
+    [DataMember(Name = "progress", IsRequired = false)]
+    internal String prg_file { get; set; } = "";
+    [DataMember(Name = "abort", IsRequired = false)]
+    internal String abort_file { get; set; } = "";
 }
 
 [DataContract]
@@ -49,13 +53,25 @@ internal class Result
     internal String result { get; set; } = "";
 }
 
+[DataContract]
+internal class Progress
+{
+    [DataMember(Name = "info", IsRequired = true)]
+    internal string info { get; set; } = "";
+    [DataMember(Name = "percentage", IsRequired = true)]
+    internal int percentage { get; set; } = -1;
+}
+
 internal class Listener : IEditorListener
 {
     private ILogMessage logger;
+    private bool _inError;
+    private String _lastError;
 
     public Listener()
     {
         logger = new LogToConsole();
+        _inError = false;
     }
 
     public void setLogger(ILogMessage l)
@@ -79,12 +95,30 @@ internal class Listener : IEditorListener
 
     public void OnError(Editor editor, string blockId, string message)
     {
-        logger.logError("Block Id(" + blockId + "): " + message);
+        String msg = "Block Id(" + blockId + "): " + message;
+        _lastError = msg;
+        _inError = true;
+        logger.logError(msg);
     }
 
     public void PartChanged(Editor editor)
     {
         logger.logDebug("Part Changed");
+    }
+
+    public bool inError()
+    {
+        return _inError;
+    }
+
+    public String lastError()
+    {
+        return _lastError;
+    }
+
+    public void resetError()
+    {
+        _inError = false;
     }
 }
 
@@ -195,6 +229,11 @@ namespace MyScriptRecognizer
 
         public async void Run()
         {
+            _logger.logInfo("MyScript Batch Recognizer started");
+            _logger.logInfo("Listening to directory " + _path);
+            _logger.logInfo("");
+            _logger.logRemaining();
+
             bool _stop = false;
             while(!_stop)
             {
@@ -228,6 +267,9 @@ namespace MyScriptRecognizer
                 {
                     _logger.logInfo("Recognition job received");
                     _editor.Clear();
+
+                    var progress_file = c.prg_file;
+                    var abort_file = c.abort_file;
 
                     var input_file = c.input_file;
                     FileInfo in_f = new FileInfo(input_file);
@@ -286,47 +328,102 @@ namespace MyScriptRecognizer
                     _logger.logDebug("Waiting for recognizer to finish");
                     DateTime tm_start = DateTime.Now;
                     int s = -1;
-                    while (!_editor.IsIdle())
+                    bool cancel = false;
+                    while (!_editor.IsIdle() && !cancel && !_listener.inError())
                     {
                         App.Current.Dispatcher.Invoke(DispatcherPriority.Background, new Action(delegate { }));
                         System.Threading.Thread.Sleep(20);
                         double seconds = DateTime.Now.Subtract(tm_start).TotalSeconds;
-                        int ss = (int)seconds;
+                        int ss = (int)(seconds * 2);
                         if (ss != s)
                         {
-                            _logger.logDebug("Waiting " + ss + " seconds...");
+                            String lang = _lang.Substring(0, 2);
+                            String info;
+                            if (lang == "nl") {
+                                info = String.Format("Handschrift herkenning bezig: {0,0:F1} seconden...", seconds);
+                            } else {
+                                info = String.Format("Recognition process busy: {0,0:F1} seconds...", seconds);
+                            }
+
+                            _logger.logInfo(info);
                             s = ss;
+
+                            FileInfo f_a = new FileInfo(abort_file);
+                            if (f_a.Exists)
+                            {
+                                _logger.logDebug("Abort file " + abort_file + " exists");
+                                cancel = true;
+                                f_a.Delete();
+                            }
+                            else
+                            {
+                                FileInfo ff = new FileInfo(progress_file);
+                                if (!ff.Exists)
+                                {
+                                    try
+                                    {
+                                        FileInfo f = new FileInfo(progress_file + "_ff");
+                                        FileStream fout = f.OpenWrite();
+                                        Progress p = new Progress();
+                                        p.info = String.Format(info);
+                                        DataContractJsonSerializer f_ser = new DataContractJsonSerializer(typeof(Progress));
+                                        f_ser.WriteObject(fout, p);
+                                        fout.Dispose();
+                                        f.MoveTo(progress_file);
+                                    } catch(Exception e)
+                                    {
+                                        _logger.logError(e.Message);
+                                    }
+                                }
+                            }
                         }
                         _logger.logRemaining();
                     }
                     //_editor.WaitForIdle();
 
-                    _logger.logDebug("Getting result...");
-                    String result = _editor.Export_(_editor.GetRootBlock(), MimeType.TEXT);
-
-                    if (_logger.debug())
+                    if (cancel)
                     {
-                        String rr = result.Replace("\n", "\\n");
-                        if (rr.Length < 40) { _logger.logDebug("Result: " + rr); }
-                        else { _logger.logDebug("Result: " + rr.Substring(0, 40) + "..."); }
+                        _logger.logInfo("Operation Cancelled");
+                    }
+                    else
+                    {
+                        _logger.logDebug("Getting result...");
+                        String result = _editor.Export_(_editor.GetRootBlock(), MimeType.TEXT);
+
+                        if (_logger.debug())
+                        {
+                            String rr = result.Replace("\n", "\\n");
+                            if (rr.Length < 40) { _logger.logDebug("Result: " + rr); }
+                            else { _logger.logDebug("Result: " + rr.Substring(0, 40) + "..."); }
+                        }
+
+                        in_f.Delete();
+
+                        _logger.logDebug("Writing back result to " + c.output_file);
+                        var result_file = c.output_file + "_rr";
+                        var result_ren = c.output_file;
+                        FileInfo result_f = new FileInfo(result_file);
+                        FileStream f_out = result_f.OpenWrite();
+                        Result r = new Result();
+
+                        if (_listener.inError()) {
+                            r.type = "error";
+                            r.result = _listener.lastError();
+                            _listener.resetError();
+                        } else {
+                            r.type = "text";
+                            r.result = result;
+                        }
+
+                        DataContractJsonSerializer res_ser = new DataContractJsonSerializer(typeof(Result));
+                        res_ser.WriteObject(f_out, r);
+                        f_out.Dispose();
+                        result_f.MoveTo(result_ren);
+
+                        _logger.logInfo("done.");
                     }
 
-                    in_f.Delete();
-
-                    _logger.logDebug("Writing back result to " + c.output_file);
-                    var result_file = c.output_file + "_ff";
-                    var result_ren = c.output_file;
-                    FileInfo result_f = new FileInfo(result_file);
-                    FileStream f_out = result_f.OpenWrite();
-                    Result r = new Result();
-                    r.type = "text";
-                    r.result = result;
-                    DataContractJsonSerializer res_ser = new DataContractJsonSerializer(typeof(Result));
-                    res_ser.WriteObject(f_out, r);
-                    f_out.Dispose();
-                    result_f.MoveTo(result_ren);
-
-                    _logger.logInfo("done.");
+                    _logger.logRemaining();
                 }
 
                 cmd_f.Delete();

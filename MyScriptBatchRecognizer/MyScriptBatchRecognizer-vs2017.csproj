@@ -162,6 +162,46 @@
       <Link>resources\analyzer\ank-raw-content.res</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="..\recognition-assets\resources\de_AT\de_AT-ak-cur.res">
+      <Link>resources\de_AT\de_AT-ak-cur.res</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\recognition-assets\resources\de_AT\de_AT-lk-text.res">
+      <Link>resources\de_AT\de_AT-lk-text.res</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\recognition-assets\resources\de_DE\de_DE-ak-cur.res">
+      <Link>resources\de_DE\de_DE-ak-cur.res</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\recognition-assets\resources\de_DE\de_DE-lk-text.res">
+      <Link>resources\de_DE\de_DE-lk-text.res</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\recognition-assets\resources\en_CA\en_CA-ak-cur.res">
+      <Link>resources\en_CA\en_CA-ak-cur.res</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\recognition-assets\resources\en_CA\en_CA-lk-text.res">
+      <Link>resources\en_CA\en_CA-lk-text.res</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\recognition-assets\resources\en_GB\en_GB-ak-cur.res">
+      <Link>resources\en_GB\en_GB-ak-cur.res</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\recognition-assets\resources\en_GB\en_GB-lk-text.res">
+      <Link>resources\en_GB\en_GB-lk-text.res</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\recognition-assets\resources\en_PH\en_PH-ak-cur.res">
+      <Link>resources\en_PH\en_PH-ak-cur.res</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\recognition-assets\resources\en_PH\en_PH-lk-text.res">
+      <Link>resources\en_PH\en_PH-lk-text.res</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="..\recognition-assets\resources\en_US\en_US-ak-cur.res">
       <Link>resources\en_US\en_US-ak-cur.res</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
@@ -180,6 +220,14 @@
     </Content>
     <Content Include="..\recognition-assets\resources\mul\mul-lk-english_secondary_1.res">
       <Link>resources\mul\mul-lk-english_secondary_1.res</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\recognition-assets\resources\nl_BE\nl_BE-ak-cur.res">
+      <Link>resources\nl_BE\nl_BE-ak-cur.res</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\recognition-assets\resources\nl_BE\nl_BE-lk-text.res">
+      <Link>resources\nl_BE\nl_BE-lk-text.res</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="..\recognition-assets\resources\nl_NL\nl_NL-ak-cur.res">
@@ -240,6 +288,30 @@
     </EmbeddedResource>
     <Content Include="..\recognition-assets\conf\nl_NL.conf">
       <Link>conf\nl_NL.conf</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\recognition-assets\conf\de_AT.conf">
+      <Link>conf\de_AT.conf</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\recognition-assets\conf\de_DE.conf">
+      <Link>conf\de_DE.conf</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\recognition-assets\conf\en_CA.conf">
+      <Link>conf\en_CA.conf</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\recognition-assets\conf\en_GB.conf">
+      <Link>conf\en_GB.conf</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\recognition-assets\conf\en_PH.conf">
+      <Link>conf\en_PH.conf</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\recognition-assets\conf\nl_BE.conf">
+      <Link>conf\nl_BE.conf</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <None Include="certificaat.p12" />

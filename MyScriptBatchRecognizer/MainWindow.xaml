@@ -7,7 +7,8 @@
         xmlns:local="clr-namespace:MyScriptBatchRecognizer"
         mc:Ignorable="d"
         Title="MyScript Batch Recognizer"
-        Loaded="Window_Loaded">
+        Loaded="Window_Loaded"
+        WindowState="Minimized">
     <Grid x:Name="WindowGrid">
         <Grid.Resources>
             <local:ShowHideApp  x:Key="ShowHide" />
@@ -27,6 +28,8 @@
             </tb:TaskbarIcon.ContextMenu>
         </tb:TaskbarIcon>
 
-        <TextBox x:Name="Log"></TextBox>
+        <ScrollViewer x:Name="Scroll">
+            <TextBox FontFamily="Courier New" x:Name="Log"></TextBox>
+        </ScrollViewer>
     </Grid>
 </Window>

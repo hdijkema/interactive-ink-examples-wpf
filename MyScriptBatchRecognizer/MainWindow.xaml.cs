@@ -19,12 +19,14 @@ namespace MyScriptBatchRecognizer
     {
         private bool log_debug = false;
         private TextBox text_box;
+        private ScrollViewer scroll_view;
         private System.Threading.Thread my_thread;
         private List<String> _msg_queue;
 
-        public Logger(TextBox tb)
+        public Logger(TextBox tb, ScrollViewer sc)
         {
             text_box = tb;
+            scroll_view = sc;
             my_thread = System.Threading.Thread.CurrentThread;
             _msg_queue = new List<String>();
             ComponentDispatcher.ThreadIdle += new EventHandler(logAsync);
@@ -43,6 +45,7 @@ namespace MyScriptBatchRecognizer
             {
                 text_box.AppendText(msg);
             }
+            scroll_view.ScrollToBottom();
         }
 
         public bool debug()
@@ -53,7 +56,8 @@ namespace MyScriptBatchRecognizer
         private String now()
         {
             DateTime dt = DateTime.Now;
-            String tm = dt.Hour + ":" + dt.Minute + ":" + dt.Second + "." + dt.Millisecond;
+            String tm = String.Format("{0,2:D2}:{1,2:D2}:{2,2:D2}.{3,3:D3}", dt.Hour, dt.Minute, dt.Second, dt.Millisecond);
+            //String tm = dt.Hour + ":" + dt.Minute + ":" + dt.Second + "." + dt.Millisecond;
             return tm;
         }
 
@@ -118,7 +122,7 @@ namespace MyScriptBatchRecognizer
 
             _recognizer = new zcRecognizer(localFolder, "en_US");
             _recognizer.initDefault();
-            _logger = new Logger(this.Log);
+            _logger = new Logger(this.Log, this.Scroll);
             _recognizer.setLogger(_logger);
             _recognizer.logger().setLogDebug(true);
 
