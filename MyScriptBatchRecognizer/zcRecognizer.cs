@@ -192,6 +192,9 @@ namespace MyScriptRecognizer
 
             _editor.Part = _part;
 
+            _editor.Configuration.SetBoolean("text.guides.enable", false);
+            _engine.Configuration.SetBoolean("text.guides.enable", false);
+
             initListener();
         }
 
@@ -249,13 +252,38 @@ namespace MyScriptRecognizer
         {
             var cmd_file = _path + "/cmd.json";
             cmd_file = cmd_file.Replace('/', '\\');
-            FileInfo cmd_f = new FileInfo(cmd_file);
-            if (cmd_f.Exists)
+            FileInfo cmd_f = null;  
+
+            bool cmd_exists = false;
+            try
             {
-                FileStream f_in = cmd_f.OpenRead();
-                DataContractJsonSerializer ser = new DataContractJsonSerializer(typeof(Cmd));
-                Cmd c = (Cmd)ser.ReadObject(f_in);
-                f_in.Dispose();
+                cmd_f = new FileInfo(cmd_file);
+                cmd_exists = cmd_f.Exists;
+            }
+            catch (Exception e)
+            {
+                _logger.logDebug(e.Message);
+            }
+
+            if (cmd_exists)
+            {
+                bool read = false;
+                Cmd c = null;
+                while (!read)
+                {
+                    try
+                    {
+                        FileStream f_in = cmd_f.OpenRead();
+                        DataContractJsonSerializer ser = new DataContractJsonSerializer(typeof(Cmd));
+                        c = (Cmd)ser.ReadObject(f_in);
+                        f_in.Dispose();
+                        read = true;
+                    }
+                    catch (Exception e)
+                    {
+                        _logger.logDebug(e.Message);
+                    }
+                }
 
                 if (c.cmd == "quit")
                 {
